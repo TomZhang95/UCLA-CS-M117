@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "919896858197",
+    "firebase_url": "https://cs-m117-live-chat-app.firebaseio.com",
+    "project_id": "cs-m117-live-chat-app",
+    "storage_bucket": "cs-m117-live-chat-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919896858197:android:fa62a0acf873f399",
+        "android_client_info": {
+          "package_name": "ucla_cs_m117.live_chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "919896858197-omvq16dqk65b1pp05d2bg098tnvrnhgn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7D92_eN-Vj2FQId15l_1P4P7XgP-SgiQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/activity_main"
+    tools:context=".MainActivity">
+    AIzaSyCob9_MvvFcRBUha5mE9eozwQDDV18UFSg
+
+    <ListView
+        android:id="@+id/room_list"
+        android:layout_width="match_parent"
+        android:layout_height="455dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignTop="@id/room_name"
+        >
+
+    </ListView>
+
+
+    <EditText
+
+        android:id="@+id/room_name"
+        android:layout_width="250dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:hint="Type room name here"
+        android:inputType="text"
+        android:background="@drawable/input_field"
+        />
+
+    <Button
+        android:id="@+id/create_room"
+        android:layout_width="95dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="Create Room"
+        tools:layout_editor_absoluteX="286dp"
+        tools:layout_editor_absoluteY="455dp" />
+
+</RelativeLayout>
