@@ -2,19 +2,28 @@ package ucla_cs_m117.live_chat;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.DateFormat;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.PlaceDetectionClient;
@@ -23,18 +32,21 @@ import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.r0adkll.slidr.Slidr;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
-import bolts.Task;
 
 public class ChatRoom extends AppCompatActivity {
 
@@ -49,7 +61,34 @@ public class ChatRoom extends AppCompatActivity {
     private Map<String, Object> msg_map = new HashMap<String, Object>();
     private DatabaseReference msg_root;
 
+    private LocationManager locationManager;
+    private String locationProvider;
+    private Location coord;
+    private Map<String, List<Double>> user_latlon = new HashMap<String, List<Double>>();
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.menu_map) {
+            Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
+            SerializableMap tmpmap=new SerializableMap();
+            Bundle bundle=new Bundle();
+            tmpmap.setMap(user_latlon);
+            bundle.putSerializable("user_latlon", tmpmap);
+            intent.putExtras(bundle);
+            intent.putExtra("user_name", user_name);
+
+            startActivity(intent);
+            //Set the animation which move the activity from right to left
+            overridePendingTransition(R.anim.in_from_right, R.anim.out_to_left);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.chat_menu,menu);
+        return true;
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -114,6 +153,7 @@ public class ChatRoom extends AppCompatActivity {
 
             }
         });
+        Slidr.attach(this);
     }
 
     private String chat_msg, chat_user_name, chat_time, chat_location;
@@ -121,20 +161,46 @@ public class ChatRoom extends AppCompatActivity {
     private void append_chat_conversation(DataSnapshot datasnapshot) {
         Iterator i;
         for (i = datasnapshot.getChildren().iterator(); i.hasNext();) {
+            Double tmp_lat, tmp_lon;
+            List<Double> tmp = new ArrayList<>();
+            tmp_lat = (Double)((DataSnapshot)i.next()).getValue();
             chat_location = (String)((DataSnapshot)i.next()).getValue();
+            tmp_lon = (Double) ((DataSnapshot)i.next()).getValue();
             chat_msg = (String)((DataSnapshot)i.next()).getValue();
             chat_user_name = (String)((DataSnapshot)i.next()).getValue();
             chat_time = (String)((DataSnapshot)i.next()).getValue();
             chat_conversation.append(chat_user_name + ": "+ chat_time + " AT " + chat_location + "\n" + chat_msg + "\n\n");
+            tmp.add(Double.valueOf(tmp_lat));
+            tmp.add(Double.valueOf(tmp_lon));
+            user_latlon.put(chat_user_name, tmp);
         }
     }
 
     private void getLocation() {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
         // Construct a PlaceDetectionClient.
         mPlaceDetectionClient = Places.getPlaceDetectionClient(getApplicationContext());
 
         if (PermissionChecker.checkSelfPermission(getApplicationContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+            //Get latitude and longitude
+            if (PermissionChecker.checkSelfPermission(getApplicationContext(),
+                    Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                coord = locationManager.getLastKnownLocation("gps");
+                if(coord == null)
+                    coord = locationManager.getLastKnownLocation("network");
+            }
+            else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        1);
+                coord = locationManager.getLastKnownLocation("gps");
+                if(coord == null)
+                    coord = locationManager.getLastKnownLocation("network");
+            }
+
+            //Get plaice name
             com.google.android.gms.tasks.Task<PlaceLikelihoodBufferResponse> placeResult = mPlaceDetectionClient.getCurrentPlace(null);
             placeResult.addOnCompleteListener(new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
                 @Override
@@ -144,15 +210,19 @@ public class ChatRoom extends AppCompatActivity {
                     location = (String) placeLikelihood.next().getPlace().getName();
                     if (location == null)
                         location = "";
+                    msg_map.put("lat", coord.getLatitude());
+                    msg_map.put("lon", coord.getLongitude());
                     msg_map.put("location", location);
                     msg_root.updateChildren(msg_map);
                     likelyPlaces.release();
                 }
             });
         }
-        else
+        else {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     1);
+            getLocation();
+        }
     }
 }
 

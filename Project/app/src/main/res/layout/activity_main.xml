@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/activity_main"
+    android:background="@android:color/white"
     tools:context=".MainActivity">
-    AIzaSyCob9_MvvFcRBUha5mE9eozwQDDV18UFSg
 
     <ListView
         android:id="@+id/room_list"
