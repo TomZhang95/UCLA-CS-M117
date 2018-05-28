@@ -18,6 +18,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.support.design.widget.Snackbar;
+import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -50,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     private String user_name;
     private DatabaseReference root = FirebaseDatabase.getInstance().getReference().getRoot();
     private RelativeLayout activity_main;
+    private String password, input_password;
+    private Map<String, String> name_to_password = new HashMap<>();
 
 
     @Override
@@ -109,10 +112,11 @@ public class MainActivity extends AppCompatActivity {
         add_room.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Map<String, Object> map = new HashMap<String, Object>();
-                map.put(room_name.getText().toString(), "");
-                root.updateChildren(map);
-                room_name.setText("");
+                if (room_name.getText().toString().lastIndexOf('_') != -1) {
+                    Toast.makeText(MainActivity.this, "Room name cannot contain '_', please try again", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                require_password();
             }
         });
 
@@ -123,7 +127,10 @@ public class MainActivity extends AppCompatActivity {
                 Iterator i = dataSnapshot.getChildren().iterator();
                 Set<String> set = new HashSet<String>();
                 while (i.hasNext()) {
-                    set.add(((DataSnapshot)i.next()).getKey());
+                    String name_with_password = ((DataSnapshot)i.next()).getKey();
+                    String tmp = name_with_password.substring(0, name_with_password.indexOf('_'));
+                    set.add(tmp);
+                    name_to_password.put(tmp, name_with_password);
                 }
                 list_of_rooms.clear();
                 list_of_rooms.addAll(set);
@@ -140,10 +147,7 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getApplicationContext(), ChatRoom.class);
-                intent.putExtra("room_name", ((TextView)view).getText().toString());
-                intent.putExtra("user_name", user_name);
-                startActivity(intent);
+                check_password(((TextView) view).getText().toString());
             }
         });
 
@@ -183,6 +187,74 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
                 require_user_name();
+            }
+        });
+
+        builder.show();
+    }
+
+    private void require_password() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false);
+        builder.setTitle("Create Chat Room Password:");
+
+        final EditText input_field = new EditText(this);
+
+        builder.setView(input_field);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Map<String, Object> map = new HashMap<String, Object>();
+                password = input_field.getText().toString();
+                String tmp = room_name.getText().toString() + '_' + password;
+                map.put(tmp, "");
+                root.updateChildren(map);
+                room_name.setText("");
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                room_name.setText("");
+            }
+        });
+
+        builder.show();
+    }
+
+    private void check_password(final String clicked_room_name) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false);
+        builder.setTitle("Enter password:");
+
+        final EditText input_field = new EditText(this);
+
+        builder.setView(input_field);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                input_password = input_field.getText().toString();
+                String full_room_name = name_to_password.get(root.child(clicked_room_name).getKey());
+                String true_password = full_room_name.substring(full_room_name.indexOf('_')+1);
+
+                if (input_password.equals(true_password)) {
+                    Intent intent = new Intent(getApplicationContext(), ChatRoom.class);
+                    intent.putExtra("room_name", full_room_name);
+                    intent.putExtra("user_name", user_name);
+                    startActivity(intent);
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "Password Incorrect, please try again", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
             }
         });
 

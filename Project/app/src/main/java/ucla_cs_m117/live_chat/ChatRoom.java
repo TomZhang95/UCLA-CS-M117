@@ -4,13 +4,11 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
@@ -21,24 +19,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.PlaceFilter;
 import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.r0adkll.slidr.Slidr;
+
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -53,7 +46,7 @@ public class ChatRoom extends AppCompatActivity {
     private Button send_button;
     private EditText input_msg;
     private TextView chat_conversation;
-    private String user_name, room_name;
+    private String user_name, full_room_name;
     private DatabaseReference root;
     private String msg_key;
     private PlaceDetectionClient mPlaceDetectionClient;
@@ -62,7 +55,6 @@ public class ChatRoom extends AppCompatActivity {
     private DatabaseReference msg_root;
 
     private LocationManager locationManager;
-    private String locationProvider;
     private Location coord;
     private Map<String, List<Double>> user_latlon = new HashMap<String, List<Double>>();
 
@@ -101,11 +93,11 @@ public class ChatRoom extends AppCompatActivity {
 
         //Get user name and room name from MainActivity
         user_name = getIntent().getExtras().get("user_name").toString();
-        room_name = getIntent().getExtras().get("room_name").toString();
-        setTitle("Room - " + room_name);
+        full_room_name = getIntent().getExtras().get("room_name").toString();
+        setTitle("Room - " + full_room_name.substring(0, full_room_name.indexOf('_')));
 
 
-        root = FirebaseDatabase.getInstance().getReference().child(room_name);
+        root = FirebaseDatabase.getInstance().getReference().child(full_room_name);
 
         send_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -185,21 +177,6 @@ public class ChatRoom extends AppCompatActivity {
         if (PermissionChecker.checkSelfPermission(getApplicationContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
-            //Get latitude and longitude
-            if (PermissionChecker.checkSelfPermission(getApplicationContext(),
-                    Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                coord = locationManager.getLastKnownLocation("gps");
-                if(coord == null)
-                    coord = locationManager.getLastKnownLocation("network");
-            }
-            else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                        1);
-                coord = locationManager.getLastKnownLocation("gps");
-                if(coord == null)
-                    coord = locationManager.getLastKnownLocation("network");
-            }
-
             //Get plaice name
             com.google.android.gms.tasks.Task<PlaceLikelihoodBufferResponse> placeResult = mPlaceDetectionClient.getCurrentPlace(null);
             placeResult.addOnCompleteListener(new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
@@ -210,8 +187,28 @@ public class ChatRoom extends AppCompatActivity {
                     location = (String) placeLikelihood.next().getPlace().getName();
                     if (location == null)
                         location = "";
-                    msg_map.put("lat", coord.getLatitude());
-                    msg_map.put("lon", coord.getLongitude());
+
+                    Double lat, lon;
+                    //Get latitude and longitude by LocationManager
+                    if (PermissionChecker.checkSelfPermission(getApplicationContext(),
+                            Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        coord = locationManager.getLastKnownLocation("gps");
+                        if(coord == null)
+                            coord = locationManager.getLastKnownLocation("network");
+                    }
+                    else {
+                        ActivityCompat.requestPermissions(ChatRoom.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                                1);
+                        coord = locationManager.getLastKnownLocation("gps");
+                        if(coord == null)
+                            coord = locationManager.getLastKnownLocation("network");
+                    }
+                    lat = coord.getLatitude();
+                    lon = coord.getLongitude();
+
+
+                    msg_map.put("lat", lat);
+                    msg_map.put("lon", lon);
                     msg_map.put("location", location);
                     msg_root.updateChildren(msg_map);
                     likelyPlaces.release();
