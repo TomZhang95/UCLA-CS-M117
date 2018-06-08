@@ -45,7 +45,7 @@ public class ChatRoom extends AppCompatActivity {
 
     private Button send_button;
     private EditText input_msg;
-    private TextView chat_conversation;
+    private TextView chat_content;
     private String user_name, full_room_name;
     private DatabaseReference root;
     private String msg_key;
@@ -89,7 +89,7 @@ public class ChatRoom extends AppCompatActivity {
 
         send_button = findViewById(R.id.send_button);
         input_msg = findViewById(R.id.input_msg);
-        chat_conversation = findViewById(R.id.msg_text);
+        chat_content = findViewById(R.id.msg_text);
 
         //Get user name and room name from MainActivity
         user_name = getIntent().getExtras().get("user_name").toString();
@@ -122,12 +122,12 @@ public class ChatRoom extends AppCompatActivity {
         root.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                append_chat_conversation(dataSnapshot);
+                append_chat_content(dataSnapshot);
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                append_chat_conversation(dataSnapshot);
+                append_chat_content(dataSnapshot);
             }
 
             @Override
@@ -150,7 +150,7 @@ public class ChatRoom extends AppCompatActivity {
 
     private String chat_msg, chat_user_name, chat_time, chat_location;
 
-    private void append_chat_conversation(DataSnapshot datasnapshot) {
+    private void append_chat_content(DataSnapshot datasnapshot) {
         Iterator i;
         for (i = datasnapshot.getChildren().iterator(); i.hasNext();) {
             Double tmp_lat, tmp_lon;
@@ -161,7 +161,7 @@ public class ChatRoom extends AppCompatActivity {
             chat_msg = (String)((DataSnapshot)i.next()).getValue();
             chat_user_name = (String)((DataSnapshot)i.next()).getValue();
             chat_time = (String)((DataSnapshot)i.next()).getValue();
-            chat_conversation.append(chat_user_name + ": "+ chat_time + " AT " + chat_location + "\n" + chat_msg + "\n\n");
+            chat_content.append(chat_user_name + ": "+ chat_time + " AT " + chat_location + "\n" + chat_msg + "\n\n");
             tmp.add(Double.valueOf(tmp_lat));
             tmp.add(Double.valueOf(tmp_lon));
             user_latlon.put(chat_user_name, tmp);

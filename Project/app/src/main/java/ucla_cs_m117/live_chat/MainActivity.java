@@ -1,6 +1,5 @@
 package ucla_cs_m117.live_chat;
 
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -29,9 +28,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.Places;
-import com.google.android.gms.location.places.PlaceDetectionClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,7 +38,6 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String account_name;
     private Button add_room;
     private EditText room_name;
     private ListView listView;
